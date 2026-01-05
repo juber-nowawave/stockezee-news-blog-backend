@@ -1,9 +1,8 @@
 import db from "../models/index.js";
 import { scrapeStockNews } from "../services/newsScraper.js";
+import { generateBlogContent } from "../ai/contentGenerator.js";
 
 const StockNewsBlog = db.stockNewsBlog;
-console.log(db.stockNewsBlog);
-
 export const fetchAndSaveNews = async (req, res) => {
   try {
     const newsData = await scrapeStockNews();
@@ -16,11 +15,19 @@ export const fetchAndSaveNews = async (req, res) => {
       // I'll do a findOne check.
       
       const existing = await StockNewsBlog.findOne({ where: { title: news.title } });
+      let aiContent = null;
       if (!existing) {
+          aiContent = await generateBlogContent(news.title, news.description);
+        try {
+        } catch (err) {
+            console.error(`AI generation failed for ${news.title}:`, err);
+        }
+
         await StockNewsBlog.create({
           title: news.title,
           description: news.description,
           image: news.image,
+          ai_generated: aiContent
           // time: new Date().toLocaleTimeString(), // handled by defaultValue/DB usually, but let's see
           // created_at: new Date() // handled by defaultValue
         });
