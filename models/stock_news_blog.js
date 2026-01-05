@@ -1,0 +1,43 @@
+export default (sequelize, DataTypes) => {
+  const stockNewsBlog = sequelize.define(
+    "stockNewsBlog",
+    {
+      id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      title: {
+          type: DataTypes.STRING,
+          allowNull: false,
+        },
+        description: {
+          type: DataTypes.TEXT,
+          allowNull: false,
+        },
+        image: {
+          type: DataTypes.TEXT,
+          allowNull: false,
+        },
+      time: {
+        type: DataTypes.TIME,
+        allowNull: false,
+        defaultValue: sequelize.literal("CURRENT_TIME"),
+      },
+      created_at: {
+        type: DataTypes.DATEONLY,
+        allowNull: false,
+        defaultValue: sequelize.literal("CURRENT_DATE"),
+      },
+    },
+    {
+      tableName: "stock_news_blog",
+      underscored: true,
+      timestamps: false,
+    }
+  );
+
+  // stockNewsBlog.sync({ alter: true });
+  return stockNewsBlog;
+};

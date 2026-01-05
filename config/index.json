@@ -1,0 +1,34 @@
+{
+  "development": {
+    "username": "postgres",
+    "password": "stockathonrds2684!!!",
+    "database": "stockezee",
+    "host": "stockathon-postgre-sql-server.cajm4tfacz8p.ap-south-1.rds.amazonaws.com",
+    "port": 5432,
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
+  },
+  "production": {
+    "username": "stockezee_proxy_user",
+    "password": "stockezee2684",
+    "database": "stockezee",
+    "host": "stockezee-proxy.proxy-cajm4tfacz8p.ap-south-1.rds.amazonaws.com",
+    "port": 5432,
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
+  },
+  "test": {
+    "use_env_variable": "DATABASE_URL",
+    "dialect": "postgres"
+  }
+}
