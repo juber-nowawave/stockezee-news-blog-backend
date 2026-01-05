@@ -16,6 +16,10 @@ export default (sequelize, DataTypes) => {
           type: DataTypes.TEXT,
           allowNull: false,
         },
+        ai_generated: {
+          type: DataTypes.TEXT,
+          allowNull: true,
+        },
         image: {
           type: DataTypes.TEXT,
           allowNull: false,
