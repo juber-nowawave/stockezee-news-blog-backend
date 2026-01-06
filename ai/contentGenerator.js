@@ -4,7 +4,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 
 const model = new ChatGoogleGenerativeAI({
   model: "gemini-2.5-flash",
-  maxOutputTokens: 2048,
+  maxOutputTokens: 8192,
   apiKey: process.env.GEMINI_API_KEY,
 });
 
