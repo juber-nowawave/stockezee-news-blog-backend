@@ -9,11 +9,6 @@ export const fetchAndSaveNews = async (req, res) => {
     let savedCount = 0;
 
     for (const news of newsData) {
-      // Check if news with same title already exists to avoid duplicates
-      // Note: In a real app, you might want a more robust unique check (e.g. hash or URL)
-      // Since the model doesn't have a unique constraint on title purely defined in what I saw,
-      // I'll do a findOne check.
-      
       const existing = await StockNewsBlog.findOne({ where: { title: news.title } });
       let aiContent = null;
       if (!existing) {
@@ -28,8 +23,6 @@ export const fetchAndSaveNews = async (req, res) => {
           description: news.description,
           image: news.image,
           ai_generated: aiContent
-          // time: new Date().toLocaleTimeString(), // handled by defaultValue/DB usually, but let's see
-          // created_at: new Date() // handled by defaultValue
         });
         savedCount++;
       }
@@ -56,5 +49,58 @@ export const getAllNews = async (req, res) => {
   } catch (error) {
     console.error("Error getting news:", error);
     res.status(500).json({ message: "Error retrieving news" });
+  }
+};
+
+export const getNewsById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const news = await StockNewsBlog.findByPk(id);
+
+    if (!news) {
+      return res.status(404).json({ message: "News not found" });
+    }
+
+    res.status(200).json(news);
+  } catch (error) {
+    console.error("Error getting news by ID:", error);
+    res.status(500).json({ message: "Error retrieving news" });
+  }
+};
+
+export const searchNewsByTitle = async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query) {
+      return res.status(400).json({ message: "Query parameter is required" });
+    }
+
+    const news = await StockNewsBlog.findAll({
+      where: {
+        title: {
+          [db.Sequelize.Op.ilike]: `%${query}%`
+        }
+      },
+      attributes: ['id', 'title']
+    });
+
+    res.status(200).json(news);
+  } catch (error) {
+    console.error("Error searching news:", error);
+    res.status(500).json({ message: "Error searching news" });
+  }
+};
+
+export const getAllNewsSummary = async (req, res) => {
+  try {
+    const news = await StockNewsBlog.findAll({
+      attributes: ['id', 'image', 'title', 'description'],
+      order: [['created_at', 'DESC'], ['time', 'DESC']]
+    });
+    
+    res.status(200).json(news);
+  } catch (error) {
+    console.error("Error getting news summary:", error);
+    res.status(500).json({ message: "Error retrieving news summary" });
   }
 };
