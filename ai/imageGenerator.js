@@ -1,83 +1,111 @@
-import axios from "axios";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { HfInference } from '@huggingface/inference';
 
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const hf = new HfInference(process.env.HUGGINGFACE_API_KEY); // Initialize once outside the function for efficiency
+
 const generateImage = async (title) => {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error("GEMINI_API_KEY is not set");
+    if (!process.env.HUGGINGFACE_API_KEY) {
+      console.error("HUGGINGFACE_API_KEY is not set");
       return null;
     }
 
-const prompt = `
-Create a high-quality, text-free conceptual image inspired by the following news title:
-
+    const prompt = `
+Create a high-quality, text-free editorial hero image inspired by the following Indian stock market news title:
+ 
 "${title}"
-
-Visual rules (strict):
+ 
+The image must visually represent market emotion, momentum, or uncertainty using symbolic and metaphorical elements only, not literal data.
+ 
+-------------------
+STRICT VISUAL RULES
+-------------------
 - NO text, NO numbers, NO charts, NO tickers, NO labels
 - NO screens, NO dashboards, NO graph axes
-- Use ONLY symbolic, metaphorical elements
-- Abstract market emotion and movement, not literal data
-- Examples of allowed elements:
-  • flowing lines
-  • light trails
-  • abstract shapes
-  • human silhouettes
-  • city skyline outlines
-  • bull or bear silhouettes (no numbers)
-  • glowing arrows without markings
-
-Style:
-- Cinematic, premium, editorial illustration
-- Clean background
-- Soft lighting
-- Professional financial-news mood
-- Indian context through color palette and environment (not text or logos)
-
-Technical:
-- Aspect ratio 16:9
-- Ultra high quality
-- No branding, no watermark
+- NO logos, NO branding, NO watermark
+- Do NOT show trading terminals or mobile apps
+- Do NOT display currency symbols or percentages
+ 
+-------------------
+ALLOWED VISUAL ELEMENTS
+-------------------
+Use only abstract and symbolic elements such as:
+- flowing light trails suggesting momentum
+- glowing paths or rising/falling directional motion
+- abstract wave patterns
+- bull or bear silhouettes without markings
+- human silhouettes reacting to movement
+- city skyline outlines with atmospheric depth
+- layered geometric shapes suggesting volatility
+ 
+-------------------
+MOOD & STORY
+-------------------
+The image should visually communicate one of these emotions based on the news:
+- optimism and breakout
+- tension and uncertainty
+- sudden momentum
+- cautious consolidation
+ 
+Use lighting, motion blur, and composition to express the mood, not symbols or text.
+ 
+-------------------
+STYLE
+-------------------
+- Cinematic financial news illustration
+- Premium editorial look
+- Clean composition with strong focal point
+- Soft dramatic lighting
+- Depth of field for professional photography feel
+- Subtle Indian market context via:
+  • warm tones
+  • monsoon sky hues
+  • city silhouettes
+  (no flags, no monuments, no cultural symbols)
+ 
+-------------------
+COMPOSITION
+-------------------
+- Clear central subject
+- Strong contrast for thumbnail visibility
+- Minimal clutter
+- Designed to work well as mobile feed preview
+ 
+-------------------
+TECHNICAL
+-------------------
+- Aspect ratio: 16:9 (use 1792x1008 resolution)
+- Ultra high resolution
+- Sharp foreground, soft background
+- Natural color grading
 `;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict?key=${apiKey}`;
-
-    const requestBody = {
-      instances: [
-        {
-          prompt: prompt,
-        },
-      ],
+    const result = await hf.textToImage({
+      model: "stabilityai/stable-diffusion-xl-base-1.0",
+      inputs: prompt,
       parameters: {
-        sampleCount: 1,
-        aspectRatio: "16:9",
-        sample_count: 1, 
-        aspect_ratio: "16:9" // Trying both cases as API versions vary
-      },
-    };
-
-    const response = await axios.post(url, requestBody, {
-        headers: {
-            'Content-Type': 'application/json'
-        }
+        num_inference_steps: 28,
+        guidance_scale: 7.5,
+        width: 1792, // For 16:9 aspect
+        height: 1008,
+        negative_prompt: "text, numbers, charts, logos, people with faces, low quality, blurry"
+      }
     });
-    
-    // Check if we got a valid response with bytesBase64Encoded
-    const predictions = response.data.predictions;
-    if (!predictions || predictions.length === 0 || !predictions[0].bytesBase64Encoded) {
-        console.error("No image data received from API:", JSON.stringify(response.data));
-        return null;
+
+    if (!result) {
+      console.error("No image generated from API");
+      return null;
     }
 
-    const base64Image = predictions[0].bytesBase64Encoded;
-    const imageBuffer = Buffer.from(base64Image, 'base64');
+    // Convert Blob to Buffer (Node.js)
+    const arrayBuffer = await result.arrayBuffer();
+    const imageBuffer = Buffer.from(arrayBuffer);
 
     // Create public/images directory if it doesn't exist
     const publicDir = path.join(__dirname, "../public/images");
@@ -96,7 +124,7 @@ Technical:
     return `/public/images/${filename}`;
 
   } catch (error) {
-    console.error("Error generating image:", error.response ? error.response.data : error.message);
+    console.error("Error generating image:", error.message || error);
     return null;
   }
 };

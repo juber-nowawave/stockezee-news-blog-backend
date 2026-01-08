@@ -1,47 +1,13 @@
+import { processStockNews } from "../services/newsService.js";
 import db from "../models/index.js";
-import { scrapeStockNews } from "../services/newsScraper.js";
-import { generateBlogContent } from "../ai/contentGenerator.js";
-import { generateImage } from "../ai/imageGenerator.js";
-
-const StockNewsBlog = db.stockNewsBlog;
+const { stockNewsBlog } = db;
 export const fetchAndSaveNews = async (req, res) => {
   try {
-    const newsData = await scrapeStockNews();
-    let savedCount = 0;
-
-    for (const news of newsData) {
-      const existing = await StockNewsBlog.findOne({ where: { title: news.title } });
-      let aiContent = null;
-      let imageUrl = news.image;
-      
-      if (!existing) {
-        aiContent = await generateBlogContent(news.title, news.description);
-        imageUrl = await generateImage(news.title);
-          
-          // if (!imageUrl) {
-          //   imageUrl = await generateImage(news.title);
-          // }
-
-        try {
-        } catch (err) {
-            console.error(`AI generation failed for ${news.title}:`, err);
-        }
-
-        await StockNewsBlog.create({
-          title: news.title,
-          description: news.description,
-          image: news.image,
-          ai_generated: aiContent
-        });
-        savedCount++;
-      }
-    }
+    const result = await processStockNews();
 
     res.status(200).json({
       message: "News scraping completed",
-      totalScraped: newsData.length,
-      savedNew: savedCount,
-      data: newsData
+      ...result
     });
   } catch (error) {
     console.error("Error in fetchAndSaveNews:", error);
@@ -51,7 +17,7 @@ export const fetchAndSaveNews = async (req, res) => {
 
 export const getAllNews = async (req, res) => {
   try {
-    const news = await StockNewsBlog.findAll({
+    const news = await stockNewsBlog.findAll({
       order: [['created_at', 'DESC'], ['time', 'DESC']]
     });
     res.status(200).json(news);
@@ -64,7 +30,7 @@ export const getAllNews = async (req, res) => {
 export const getNewsById = async (req, res) => {
   try {
     const { id } = req.params;
-    const news = await StockNewsBlog.findByPk(id);
+    const news = await stockNewsBlog.findByPk(id);
 
     if (!news) {
       return res.status(404).json({ message: "News not found" });
@@ -84,7 +50,7 @@ export const searchNewsByTitle = async (req, res) => {
       return res.status(400).json({ message: "Query parameter is required" });
     }
 
-    const news = await StockNewsBlog.findAll({
+    const news = await stockNewsBlog.findAll({
       where: {
         title: {
           [db.Sequelize.Op.ilike]: `%${query}%`
@@ -102,7 +68,7 @@ export const searchNewsByTitle = async (req, res) => {
 
 export const getAllNewsSummary = async (req, res) => {
   try {
-    const news = await StockNewsBlog.findAll({
+    const news = await stockNewsBlog.findAll({
       attributes: ['id', 'image', 'title', 'description','created_at','time'],
       order: [['created_at', 'DESC'], ['time', 'DESC']]
     });
