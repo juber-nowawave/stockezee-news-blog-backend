@@ -1,6 +1,7 @@
 import db from "../models/index.js";
 import { scrapeStockNews } from "../services/newsScraper.js";
 import { generateBlogContent } from "../ai/contentGenerator.js";
+import { generateImage } from "../ai/imageGenerator.js";
 
 const StockNewsBlog = db.stockNewsBlog;
 export const fetchAndSaveNews = async (req, res) => {
@@ -11,8 +12,16 @@ export const fetchAndSaveNews = async (req, res) => {
     for (const news of newsData) {
       const existing = await StockNewsBlog.findOne({ where: { title: news.title } });
       let aiContent = null;
+      let imageUrl = news.image;
+      
       if (!existing) {
-          aiContent = await generateBlogContent(news.title, news.description);
+        aiContent = await generateBlogContent(news.title, news.description);
+        imageUrl = await generateImage(news.title);
+          
+          // if (!imageUrl) {
+          //   imageUrl = await generateImage(news.title);
+          // }
+
         try {
         } catch (err) {
             console.error(`AI generation failed for ${news.title}:`, err);
@@ -94,7 +103,7 @@ export const searchNewsByTitle = async (req, res) => {
 export const getAllNewsSummary = async (req, res) => {
   try {
     const news = await StockNewsBlog.findAll({
-      attributes: ['id', 'image', 'title', 'description'],
+      attributes: ['id', 'image', 'title', 'description','created_at','time'],
       order: [['created_at', 'DESC'], ['time', 'DESC']]
     });
     
