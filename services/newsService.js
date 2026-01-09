@@ -17,11 +17,11 @@ export const processStockNews = async () => {
       if (!existing) {
         let aiContent = null;
         let imageUrl = news.image;
+        imageUrl = await generateImage(news.title);
 
         // Generate AI content if not present
         if (!aiContent) {
            aiContent = await generateBlogContent(news.title, news.description);
-           imageUrl = await generateImage(news.title);
         }
         
         // Generate Image if not present
@@ -31,7 +31,7 @@ export const processStockNews = async () => {
         await StockNewsBlog.create({
           title: news.title,
           description: news.description,
-          image: imageUrl,
+          image: news.image,
           ai_generated: aiContent
         });
         savedCount++;
