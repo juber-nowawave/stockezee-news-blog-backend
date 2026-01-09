@@ -10,7 +10,8 @@ const model = new ChatGoogleGenerativeAI({
 
 const generateBlogContent = async (title, description) => {
   try {
-const prompt = PromptTemplate.fromTemplate(`
+    const prompt = PromptTemplate.fromTemplate(
+      `
 You are a senior Indian stock market analyst, financial journalist, and SEO strategist writing authoritative market news for Stockezee.com.
 
 Your task is to generate a **daily Indian stock market news article** explaining what changed in the market today, why it matters now, and what traders and investors should watch next.  
@@ -46,22 +47,22 @@ WRITING OBJECTIVES
 - Ensure suitability for Google Search, Google Discover, and Google News.
 
 --------------------------------------------------
-STRICT HTML OUTPUT RULES
+STRICT HTML OUTPUT RULES (FOR generated_blog)
 --------------------------------------------------
 - Use <h1> only for the main headline.
 - Use <h2> only for section subheadings.
-- Each <h2> must appear visually separated from the previous section (assume top spacing).
+- Each <h2> must appear visually separated from the previous section.
 - Group related paragraphs under each section inside a single <div>.
 - Each paragraph must be wrapped in <p> tags.
-- Use <strong><u>...</u></strong> ONLY for key market terms, critical movements, or important conclusions.
-- Do NOT overuse bold or underline formatting.
+- Use <strong></strong> ONLY for key market terms, critical movements, or important conclusions.
+- Do NOT overuse bold formatting.
 - Use <ul> only where listing stocks or signals improves clarity.
 - Do NOT include <html>, <head>, or <body> tags.
 - Do NOT use emojis, symbols, or decorative characters.
 - Output must be valid, clean, professional HTML only.
 
 --------------------------------------------------
-MANDATORY CONTENT STRUCTURE
+MANDATORY CONTENT STRUCTURE (FOR generated_blog)
 --------------------------------------------------
 
 1. <h1>  
@@ -69,38 +70,106 @@ MANDATORY CONTENT STRUCTURE
 
 2. Introduction  
    <div>
-     <p> 1–2 concise paragraphs explaining <strong><u>what happened in the market today</u></strong> and <strong><u>why traders paid attention</u></strong>. </p>
+     <p>
+       1–2 concise paragraphs explaining <strong>what happened in the market today</strong>
+       and <strong>why traders paid attention</strong>.
+     </p>
    </div>
 
 3. <h2> What Triggered Today’s Market Move  
    <div>
-     <p> Explain the <strong><u>primary drivers</u></strong> such as news, results, sector rotation, global cues, or macro developments. </p>
+     <p>
+       Explain the <strong>primary drivers</strong> such as news, results, sector rotation,
+       global cues, or macro developments.
+     </p>
    </div>
 
 4. <h2> Sector and Stock-Specific Impact on NSE and BSE  
    <div>
-     <p> Highlight <strong><u>affected sectors</u></strong> and <strong><u>key stocks</u></strong> showing meaningful price and volume behavior. </p>
+     <p>
+       Highlight <strong>affected sectors</strong> and <strong>key stocks</strong>
+       showing meaningful price and volume behavior.
+     </p>
    </div>
 
 5. <h2> What Today’s Screener Signals Are Showing  
    <div>
-     <p> Explain <strong><u>volume breakouts</u></strong>, <strong><u>momentum shifts</u></strong>, <strong><u>VWAP behavior</u></strong>, and trend strength where relevant. </p>
+     <p>
+       Explain <strong>volume breakouts</strong>, <strong>momentum shifts</strong>,
+       <strong>VWAP behavior</strong>, and trend strength where relevant.
+     </p>
    </div>
 
 6. <h2> What This Means for Traders and Investors  
    <div>
-     <p> Discuss <strong><u>short-term trading behavior</u></strong>, <strong><u>swing or positional outlook</u></strong>, and <strong><u>risk or volatility awareness</u></strong>. </p>
+     <p>
+       Discuss <strong>short-term trading behavior</strong>,
+       <strong>swing or positional outlook</strong>,
+       and <strong>risk or volatility awareness</strong>.
+     </p>
    </div>
 
 7. <h2> Market Outlook and Key Levels to Watch  
    <div>
-     <p> Cover <strong><u>index behavior</u></strong>, <strong><u>sector continuation</u></strong>, and potential near-term scenarios traders are monitoring. </p>
+     <p>
+       Cover <strong>index behavior</strong>, <strong>sector continuation</strong>,
+       and potential near-term scenarios traders are monitoring.
+     </p>
    </div>
 
 8. <h2> Conclusion  
    <div>
-     <p> Summarize the <strong><u>overall market tone</u></strong> and clearly state <strong><u>what participants should track next</u></strong>, ending with a complete and actionable market takeaway. </p>
+     <p>
+       Summarize the <strong>overall market tone</strong> and clearly state
+       <strong>what participants should track next</strong>,
+       ending with a complete and actionable market takeaway.
+     </p>
    </div>
+
+--------------------------------------------------
+META DATA REQUIREMENTS
+--------------------------------------------------
+
+- Generate a **meta_title** optimized for SEO and Google Discover.
+- Meta title must be **55–60 characters**.
+- Include strong Indian market keywords such as Nifty, Sensex, Indian stock market, NSE, or sector cues where relevant.
+- Meta title must create curiosity without clickbait.
+
+- Generate a **meta_description** optimized for Google Search.
+- Meta description must be **140–160 characters**.
+- Clearly summarize the market move, trigger, and relevance for traders.
+- Do NOT use emojis or promotional language.
+
+--------------------------------------------------
+CRITICAL OUTPUT SAFETY RULES (MANDATORY)
+--------------------------------------------------
+
+- The final response MUST be valid, parsable JSON.
+- DO NOT wrap the response in markdown or code blocks.
+- DO NOT include backticks, explanations, or extra text.
+- All string values MUST be valid JSON strings.
+
+IMPORTANT JSON SAFETY RULES:
+- DO NOT use unescaped double quotes (") inside any string value.
+- Inside generated HTML content, use single quotes (') instead of double quotes (").
+- Do NOT include phrases like "regulatory risk" using double quotes.
+  Use: regulatory risk (without quotes) OR 'regulatory risk'.
+- Line breaks must be represented as normal text, not raw newlines.
+- No trailing commas anywhere in the JSON.
+
+If the output is not valid JSON, the response is considered INVALID.
+
+--------------------------------------------------
+FINAL RESPONSE FORMAT (STRICT)
+--------------------------------------------------
+
+Return ONLY this JSON object and nothing else:
+
+{{
+  "generated_blog": "HTML content here (JSON-safe, no unescaped double quotes)",
+  "meta_title": "SEO meta title (JSON-safe)",
+  "meta_description": "SEO meta description (JSON-safe)"
+}}
 
 --------------------------------------------------
 CONTENT LENGTH
@@ -114,26 +183,40 @@ CONTENT RESTRICTIONS
 - Do NOT use textbook investment theory.
 - Do NOT sound promotional or advisory.
 - Do NOT use placeholders or incomplete sentences.
-
---------------------------------------------------
-FINAL OUTPUT REQUIREMENT
---------------------------------------------------
-Return ONLY the final, fully completed HTML-formatted article.
-Do NOT include explanations, notes, or extra text.
-`);
-
+`
+    );
 
     const outputParser = new StringOutputParser();
     const chain = prompt.pipe(model).pipe(outputParser);
 
-    const response = await chain.invoke({
+    const rawResponse = await chain.invoke({
       title: title,
       description: description,
     });
-    return response;
+    if (!rawResponse || typeof rawResponse !== "string") {
+      throw new Error("Invalid AI response");
+    }
+
+    let cleaned = rawResponse
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    cleaned = cleaned.replace(/,\s*}/g, "}");
+
+    const parsed = JSON.parse(cleaned);
+
+    if (
+      !parsed.generated_blog ||
+      !parsed.meta_title ||
+      !parsed.meta_description
+    ) {
+      throw new Error("Missing required fields in AI response");
+    }
+    return parsed;
   } catch (error) {
     console.error("AI Generation Error:", error);
-    return null; 
+    return null;
   }
 };
 

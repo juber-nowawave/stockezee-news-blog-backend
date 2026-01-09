@@ -1,17 +1,14 @@
 import { processStockNews } from "../services/newsService.js";
+import { sendResponse } from "../utils/api_response.js";
 import db from "../models/index.js";
 const { stockNewsBlog } = db;
 export const fetchAndSaveNews = async (req, res) => {
   try {
     const result = await processStockNews();
-
-    res.status(200).json({
-      message: "News scraping completed",
-      ...result
-    });
+    return sendResponse(res, 200, "News scraping completed", result);
   } catch (error) {
     console.error("Error in fetchAndSaveNews:", error);
-    res.status(500).json({ message: "Error fetching news", error: error.message });
+    return sendResponse(res, 500, "Error fetching news", { error: error.message });
   }
 };
 
@@ -20,10 +17,10 @@ export const getAllNews = async (req, res) => {
     const news = await stockNewsBlog.findAll({
       order: [['created_at', 'DESC'], ['time', 'DESC']]
     });
-    res.status(200).json(news);
+    return sendResponse(res, 200, "News retrieved", news);
   } catch (error) {
     console.error("Error getting news:", error);
-    res.status(500).json({ message: "Error retrieving news" });
+    return sendResponse(res, 500, "Error retrieving news", { error: error.message });
   }
 };
 
@@ -33,13 +30,13 @@ export const getNewsById = async (req, res) => {
     const news = await stockNewsBlog.findByPk(id);
 
     if (!news) {
-      return res.status(404).json({ message: "News not found" });
+      return sendResponse(res, 404, "News not found", []);
     }
 
-    res.status(200).json(news);
+    return sendResponse(res, 200, "News retrieved", news);
   } catch (error) {
     console.error("Error getting news by ID:", error);
-    res.status(500).json({ message: "Error retrieving news" });
+    return sendResponse(res, 500, "Error retrieving news", { error: error.message });
   }
 };
 
@@ -47,7 +44,7 @@ export const searchNewsByTitle = async (req, res) => {
   try {
     const { query } = req.query;
     if (!query) {
-      return res.status(400).json({ message: "Query parameter is required" });
+      return sendResponse(res, 400, "Query parameter is required", []);
     }
 
     const news = await stockNewsBlog.findAll({
@@ -59,23 +56,21 @@ export const searchNewsByTitle = async (req, res) => {
       attributes: ['id', 'title']
     });
 
-    res.status(200).json(news);
+    return sendResponse(res, 200, "Search results", news);
   } catch (error) {
     console.error("Error searching news:", error);
-    res.status(500).json({ message: "Error searching news" });
+    return sendResponse(res, 500, "Error searching news", { error: error.message });
   }
 };
 
 export const getAllNewsSummary = async (req, res) => {
   try {
     const news = await stockNewsBlog.findAll({
-      attributes: ['id', 'image', 'title', 'description','created_at','time'],
       order: [['created_at', 'DESC'], ['time', 'DESC']]
     });
-    
-    res.status(200).json(news);
+    return sendResponse(res, 200, "News summary retrieved", news);
   } catch (error) {
     console.error("Error getting news summary:", error);
-    res.status(500).json({ message: "Error retrieving news summary" });
+    return sendResponse(res, 500, "Error retrieving news summary", { error: error.message });
   }
 };

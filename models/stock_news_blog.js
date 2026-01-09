@@ -9,21 +9,33 @@ export default (sequelize, DataTypes) => {
         autoIncrement: true,
       },
       title: {
-          type: DataTypes.STRING,
-          allowNull: false,
-        },
-        description: {
-          type: DataTypes.TEXT,
-          allowNull: false,
-        },
-        ai_generated: {
-          type: DataTypes.TEXT,
-          allowNull: true,
-        },
-        image: {
-          type: DataTypes.TEXT,
-          allowNull: false,
-        },
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      meta_title: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+      description: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+      meta_description: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+      ai_generated: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      news_image: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+      ai_image: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
       time: {
         type: DataTypes.TIME,
         allowNull: false,
