@@ -2,6 +2,7 @@ import db from "../models/index.js";
 import { scrapeStockNews } from "./newsScraper.js";
 import { generateBlogContent } from "../ai/contentGenerator.js";
 import { generateImage } from "../ai/imageGenerator.js";
+import moment from "moment";
 
 const StockNewsBlog = db.stockNewsBlog;
 
@@ -32,7 +33,9 @@ export const processStockNews = async () => {
           title: news.title,
           description: news.description,
           image: news.image,
-          ai_generated: aiContent
+          ai_generated: aiContent,
+          time: moment().tz('Asia/Kolkata').format("HH:mm:ss"),
+          created_at: moment().tz('Asia/Kolkata').format("YYYY-MM-DD"),
         });
         savedCount++;
         console.log(`Saved new article: ${news.title}`);
