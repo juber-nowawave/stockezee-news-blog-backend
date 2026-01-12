@@ -49,8 +49,10 @@ WRITING OBJECTIVES
 --------------------------------------------------
 STRICT HTML OUTPUT RULES (FOR generated_blog)
 --------------------------------------------------
-- Use <h1> only for the main headline.
-- Use <h2> only for section subheadings.
+- The <h1> tag is STRICTLY FORBIDDEN.
+- Do NOT use <h1> anywhere in the generated_blog.
+- If a main headline is required, use <h2> instead.
+- All headings must use <h2> or other appropriate heading tags, but NEVER <h1>.
 - Each <h2> must appear visually separated from the previous section.
 - Group related paragraphs under each section inside a single <div>.
 - Each paragraph must be wrapped in <p> tags.
@@ -60,6 +62,7 @@ STRICT HTML OUTPUT RULES (FOR generated_blog)
 - Do NOT include <html>, <head>, or <body> tags.
 - Do NOT use emojis, symbols, or decorative characters.
 - Output must be valid, clean, professional HTML only.
+- Before returning the final output, recheck the content.
 
 --------------------------------------------------
 MANDATORY CONTENT STRUCTURE (FOR generated_blog)
@@ -134,13 +137,49 @@ META DATA REQUIREMENTS
 - Meta title must be **55–60 letters**.
 - Include strong Indian market keywords such as Nifty, Sensex, Indian stock market, NSE, or sector cues where relevant.
 - Meta title must create curiosity without clickbait.
-- Meta title must not contain question marks, commas, single quotes or apostrophes, or colons.
+- Meta title must not contain question marks, commas, single quotes, apostrophes, colons.
+- Meta title must not contain any kind of symbol (',',';','.',':','-','(',')','[',']') etc.
 - Meta title must be in English only.
 
 - Generate a **meta_description** optimized for Google Search.
 - Meta description must be **140–160 characters**.
 - Clearly summarize the market move, trigger, and relevance for traders.
 - Do NOT use emojis or promotional language.
+
+--------------------------------------------------
+META TITLE CHARACTER ENFORCEMENT (MANDATORY)
+--------------------------------------------------
+
+The meta_title MUST strictly follow these rules:
+
+- Allowed characters: 
+  ONLY uppercase and lowercase English letters (A–Z, a–z) and single spaces.
+- Do NOT use:
+  - hyphens or dashes (- – —)
+  - commas
+  - periods
+  - colons or semicolons
+  - apostrophes or quotes
+  - brackets or parentheses
+  - special characters of any kind
+  - numbers
+- Words must be separated by a single space only.
+- Do NOT use double spaces.
+- The meta_title must be a plain sentence using letters and spaces only.
+
+If the initially generated meta_title violates ANY rule above:
+- Rewrite it immediately to fully comply.
+- Recheck before final output.
+
+--------------------------------------------------
+FINAL META TITLE VALIDATION (CRITICAL)
+--------------------------------------------------
+
+Before returning the final JSON:
+- Verify the meta_title contains ONLY English letters and spaces.
+- If any symbol, punctuation, number, or special character is present,
+  regenerate the meta_title until it fully complies.
+- Do NOT mention this validation in the output.
 
 --------------------------------------------------
 TIME & DATA FRESHNESS CONSTRAINT (CRITICAL)
