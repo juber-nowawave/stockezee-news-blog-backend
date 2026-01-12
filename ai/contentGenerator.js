@@ -143,6 +143,24 @@ META DATA REQUIREMENTS
 - Do NOT use emojis or promotional language.
 
 --------------------------------------------------
+TIME & DATA FRESHNESS CONSTRAINT (CRITICAL)
+--------------------------------------------------
+
+- Assume the article is being written for TODAY'S INDIAN MARKET SESSION ONLY.
+- Treat TODAY as the current calendar date at the time of generation.
+- Do NOT recall or reuse price levels, index values, or stock prices from past years such as 2023 or 2024.
+- Do NOT invent historical price data from memory.
+- If exact live prices are not explicitly provided in the input data, describe price action ONLY in relative terms such as:
+  - moved higher
+  - declined
+  - consolidated
+  - tested resistance
+  - remained range-bound
+  - saw increased volatility
+- NEVER mention exact index values, stock prices, or percentage moves unless they can be logically inferred from TODAY’S news description.
+- If uncertain about exact numbers, prioritize ACCURACY over specificity and use qualitative market language.
+
+--------------------------------------------------
 CRITICAL OUTPUT SAFETY RULES (MANDATORY)
 --------------------------------------------------
 

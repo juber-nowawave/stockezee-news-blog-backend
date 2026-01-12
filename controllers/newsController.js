@@ -1,6 +1,7 @@
 import { processStockNews } from "../services/newsService.js";
 import { sendResponse } from "../utils/api_response.js";
 import db from "../models/index.js";
+import { Op } from "sequelize";
 const { stockNewsBlog } = db;
 export const fetchAndSaveNews = async (req, res) => {
   try {
@@ -42,10 +43,10 @@ export const getNewsById = async (req, res) => {
 
 export const getNewsByMetaTitle = async (req, res) => {
   try {
-    const { meta_title } = req.query;
+    let { meta_title } = req.query;
     const news = await stockNewsBlog.findOne({
       where: {
-        meta_title: meta_title
+        meta_title: { [Op.iLike]: meta_title }
       }
     });
 
