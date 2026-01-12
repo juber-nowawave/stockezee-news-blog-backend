@@ -2,6 +2,7 @@ import db from "../models/index.js";
 import { scrapeStockNews } from "./newsScraper.js";
 import { generateBlogContent } from "../ai/contentGenerator.js";
 import { generateImage } from "../ai/imageGenerator.js";
+import { generateAndUploadImage } from "./newsImageService.js";
 import moment from "moment";
 
 const StockNewsBlog = db.stockNewsBlog;
@@ -23,10 +24,13 @@ export const processStockNews = async () => {
         // imageUrl = await generateImage(news.title);
 
         // Generate AI content if not present
-        if (!aiContent) {
           aiContent = await generateBlogContent(news.title, news.description);
+
+        // Fetch AI Image from external service and upload to S3
+        let aiImageUrl = await generateAndUploadImage(news.title, news.description);
+        if (!aiImageUrl) {
+            aiImageUrl = news.image; // Fallback to original image if generation fails
         }
-        console.log("22222---->>", aiContent);
 
         await StockNewsBlog.create({
           title: news.title,
@@ -36,7 +40,7 @@ export const processStockNews = async () => {
           meta_title: aiContent.meta_title,
           meta_description: aiContent.meta_description,
           news_image: news.image,
-          ai_image: news.image,
+          ai_image: aiImageUrl,
           time: moment().tz("Asia/Kolkata").format("HH:mm:ss"),
           created_at: moment().tz("Asia/Kolkata").format("YYYY-MM-DD"),
         });

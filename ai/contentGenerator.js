@@ -131,9 +131,11 @@ META DATA REQUIREMENTS
 --------------------------------------------------
 
 - Generate a **meta_title** optimized for SEO and Google Discover.
-- Meta title must be **55–60 characters**.
+- Meta title must be **55–60 letters**.
 - Include strong Indian market keywords such as Nifty, Sensex, Indian stock market, NSE, or sector cues where relevant.
 - Meta title must create curiosity without clickbait.
+- Meta title must not contain question marks, commas, single quotes or apostrophes, or colons.
+- Meta title must be in English only.
 
 - Generate a **meta_description** optimized for Google Search.
 - Meta description must be **140–160 characters**.

@@ -26,8 +26,28 @@ export const getAllNews = async (req, res) => {
 
 export const getNewsById = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.query;
     const news = await stockNewsBlog.findByPk(id);
+
+    if (!news) {
+      return sendResponse(res, 404, "News not found", []);
+    }
+
+    return sendResponse(res, 200, "News retrieved", news);
+  } catch (error) {
+    console.error("Error getting news by ID:", error);
+    return sendResponse(res, 500, "Error retrieving news", { error: error.message });
+  }
+};
+
+export const getNewsByMetaTitle = async (req, res) => {
+  try {
+    const { meta_title } = req.query;
+    const news = await stockNewsBlog.findOne({
+      where: {
+        meta_title: meta_title
+      }
+    });
 
     if (!news) {
       return sendResponse(res, 404, "News not found", []);
@@ -66,7 +86,8 @@ export const searchNewsByTitle = async (req, res) => {
 export const getAllNewsSummary = async (req, res) => {
   try {
     const news = await stockNewsBlog.findAll({
-      order: [['created_at', 'DESC'], ['time', 'DESC']]
+      order: [['created_at', 'DESC'], ['time', 'DESC']],
+      attributes:{exclude: ['ai_generated']}
     });
     return sendResponse(res, 200, "News summary retrieved", news);
   } catch (error) {
