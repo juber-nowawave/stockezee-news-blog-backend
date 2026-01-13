@@ -10,6 +10,8 @@ cron.schedule('0 8,17 * * *', async () => {
   } catch (error) {
     console.error('Error in scheduled news scraping:', error);
   }
+},{
+    timezone: 'Asia/Kolkata'
 });
 
 console.log('Cron jobs scheduled');
