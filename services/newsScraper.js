@@ -24,6 +24,25 @@ const getCheerioDoc = async (url) => {
 
 const cleanText = (text) => text ? text.replace(/\s+/g, " ").trim() : "";
 
+const getImageFromArticle = async (url) => {
+  if (!url) return "";
+  try {
+    const $ = await getCheerioDoc(url);
+    if (!$) return "";
+    
+    // Prioritize standard high-res meta tags
+    const ogImage = $("meta[property='og:image']").attr("content");
+    if (ogImage) return ogImage;
+    
+    const twitterImage = $("meta[name='twitter:image']").attr("content");
+    if (twitterImage) return twitterImage;
+    
+    return "";
+  } catch (e) {
+    return "";
+  }
+};
+
 // --- Individual Scrapers (INDIAN CONTEXT) ---
 
 const scrapeMoneyControl = async () => {
@@ -37,21 +56,34 @@ const scrapeMoneyControl = async () => {
     const promises = urls.map(async (url) => {
         const $ = await getCheerioDoc(url);
         if (!$) return [];
-        const items = [];
         
+        // limit to top 10 to avoid too many requests
+        const elements = [];
         $("li.clearfix").each((i, el) => {
             if (i > 10) return;
-            const titleEl = $(el).find("h2 a");
-            const imgEl = $(el).find("img");
-            
-            items.push({
+            elements.push(el);
+        });
+
+        const items = await Promise.all(elements.map(async (el) => {
+             const titleEl = $(el).find("h2 a");
+             const imgEl = $(el).find("img");
+             const link = titleEl.attr("href");
+             
+             // Get high res image
+             let highResImage = await getImageFromArticle(link);
+             if (!highResImage) {
+                 highResImage = imgEl.attr("data-src") || imgEl.attr("src") || "";
+             }
+
+             return {
                 title: cleanText(titleEl.attr("title") || titleEl.text()),
                 description: cleanText($(el).find("p").text()),
-                image: imgEl.attr("data-src") || imgEl.attr("src") || "",
-                url: titleEl.attr("href"),
+                image: highResImage,
+                url: link,
                 source: "MoneyControl"
-            });
-        });
+            };
+        }));
+        
         return items;
     });
 
@@ -70,24 +102,33 @@ const scrapeEconomicTimes = async () => {
     const promises = urls.map(async (url) => {
         const $ = await getCheerioDoc(url);
         if (!$) return [];
-        const items = [];
-
+        
+        const elements = [];
         $("div.eachStory").each((i, el) => {
             if (i > 10) return;
+            elements.push(el);
+        });
+
+        const items = await Promise.all(elements.map(async (el) => {
             const titleEl = $(el).find("h3 a");
             const imgEl = $(el).find("span.imgContainer img");
             
             const link = titleEl.attr("href");
             const fullLink = link && link.startsWith("/") ? `https://economictimes.indiatimes.com${link}` : link;
 
-            items.push({
+            let highResImage = await getImageFromArticle(fullLink);
+             if (!highResImage) {
+                 highResImage = imgEl.attr("data-original") || imgEl.attr("src") || "";
+             }
+
+            return {
                 title: cleanText(titleEl.text()),
                 description: cleanText($(el).find("p").text()),
-                image: imgEl.attr("data-original") || imgEl.attr("src") || "",
+                image: highResImage,
                 url: fullLink,
                 source: "Economic Times"
-            });
-        });
+            };
+        }));
         return items;
     });
 
@@ -105,44 +146,62 @@ const scrapeLiveMint = async () => {
     const promises = urls.map(async (url) => {
         const $ = await getCheerioDoc(url);
         if (!$) return [];
+        
         const items = [];
+        const elements = [];
 
         // Primary list view
         $("#listView .listtostory").each((i, el) => {
              if (i > 10) return;
-             const titleEl = $(el).find(".headline a");
-             const imgEl = $(el).find(".thumbnail img");
-             
-             const link = titleEl.attr("href");
-             const fullLink = link && link.startsWith("/") ? `https://www.livemint.com${link}` : link;
-
-             items.push({
-               title: cleanText(titleEl.text()),
-               description: cleanText($(el).find("h2.intro").textStart? $(el).find("h2.intro").text() : ""),
-               image: imgEl.attr("data-src") || imgEl.attr("src") || "",
-               url: fullLink,
-               source: "LiveMint"
-             });
+             elements.push({type: 'list', el});
         });
 
-        // Fallback for card view which Mint sometimes uses
-        if (items.length === 0) {
+        // Fallback
+        if (elements.length === 0) {
              $(".listingSec .listing").each((i, el) => {
+                 if (i > 10) return;
+                 elements.push({type: 'card', el});
+             })
+        }
+
+        const scrapedItems = await Promise.all(elements.map(async ({type, el}) => {
+             if (type === 'list') {
+                 const titleEl = $(el).find(".headline a");
+                 const imgEl = $(el).find(".thumbnail img");
+                 
+                 const link = titleEl.attr("href");
+                 const fullLink = link && link.startsWith("/") ? `https://www.livemint.com${link}` : link;
+
+                 let highResImage = await getImageFromArticle(fullLink);
+                 if (!highResImage) {
+                    highResImage = imgEl.attr("data-src") || imgEl.attr("src") || "";
+                 }
+
+                 return {
+                   title: cleanText(titleEl.text()),
+                   description: cleanText($(el).find("h2.intro").textStart? $(el).find("h2.intro").text() : ""),
+                   image: highResImage,
+                   url: fullLink,
+                   source: "LiveMint"
+                 };
+             } else {
                  const titleEl = $(el).find("h2 a");
                  const link = titleEl.attr("href");
                  const fullLink = link && link.startsWith("/") ? `https://www.livemint.com${link}` : link;
                  
-                 items.push({
+                 const highResImage = await getImageFromArticle(fullLink);
+
+                 return {
                      title: cleanText(titleEl.text()),
                      description: "",
-                     image: "",
+                     image: highResImage,
                      url: fullLink,
                      source: "LiveMint"
-                 })
-             })
-        }
+                 }
+             }
+        }));
 
-        return items;
+        return scrapedItems;
     });
 
     const results = await Promise.all(promises);
@@ -159,24 +218,30 @@ const scrapeBusinessStandard = async () => {
     const promises = urls.map(async (url) => {
         const $ = await getCheerioDoc(url);
         if (!$) return [];
-        const items = [];
-
+        
+        const elements = [];
         $(".listing-txt").each((i, el) => {
            if (i > 10) return;
+           elements.push(el);
+        });
+
+        const items = await Promise.all(elements.map(async (el) => {
            const titleEl = $(el).find("h2 a");
            const date = $(el).find("p").text(); 
            
            const link = titleEl.attr("href");
            const fullLink = link && link.startsWith("/") ? `https://www.business-standard.com${link}` : link;
            
-           items.push({
+           const highResImage = await getImageFromArticle(fullLink);
+
+           return {
                title: cleanText(titleEl.text()),
                description: cleanText(date), 
-               image: "", 
+               image: highResImage, 
                url: fullLink,
                source: "Business Standard"
-           });
-        });
+           };
+        }));
         return items;
     });
 
@@ -189,10 +254,14 @@ const scrapeYahooFinanceIndia = async () => {
     // Targeting IN domain
     const $ = await getCheerioDoc("https://in.finance.yahoo.com/topic/stock-market-news");
     if (!$) return [];
-    const newsList = [];
     
+    const elements = [];
     $("li.js-stream-content").each((i, el) => {
         if (i > 10) return;
+        elements.push(el);
+    });
+    
+    const newsList = await Promise.all(elements.map(async (el) => {
         const titleEl = $(el).find("h3 a");
         const descEl = $(el).find("p");
         
@@ -203,16 +272,19 @@ const scrapeYahooFinanceIndia = async () => {
         }
 
         if (titleEl.length) {
-            newsList.push({
+            const highResImage = await getImageFromArticle(fullLink);
+            return {
                 title: cleanText(titleEl.text()),
                 description: cleanText(descEl.text()),
-                image: "", 
+                image: highResImage, 
                 url: fullLink,
                 source: "Yahoo Finance India"
-            });
+            };
         }
-    });
-    return newsList;
+        return null;
+    }));
+
+    return newsList.filter(n => n !== null);
 }
 
 const scrapeInvestingIndia = async () => {
@@ -225,27 +297,37 @@ const scrapeInvestingIndia = async () => {
     const promises = urls.map(async (url) => {
         const $ = await getCheerioDoc(url);
         if (!$) return [];
-        const items = [];
         
+        const elements = [];
         $("article").each((i, el) => {
              if (i > 10) return;
+             elements.push(el);
+        });
+
+        const items = await Promise.all(elements.map(async (el) => {
              const titleEl = $(el).find("a.title");
              const imgEl = $(el).find("img");
              
              const link = titleEl.attr("href");
              const fullLink = link && link.startsWith("/") ? `https://in.investing.com${link}` : link;
-
+             
              if (titleEl.length > 0) {
-                 items.push({
+                 let highResImage = await getImageFromArticle(fullLink);
+                 if (!highResImage) {
+                     highResImage = imgEl.attr("src") || "";
+                 }
+                 
+                 return {
                      title: cleanText(titleEl.text()),
                      description: "",
-                     image: imgEl.attr("src") || "",
+                     image: highResImage,
                      url: fullLink,
                      source: "Investing.com India"
-                 });
+                 };
              }
-        });
-        return items;
+             return null;
+        }));
+        return items.filter(i => i !== null);
     });
 
     const results = await Promise.all(promises);
@@ -258,26 +340,32 @@ const scrapeCNBC = async () => {
      // but 'asia-markets' is the closest standard section.
      const $ = await getCheerioDoc("https://www.cnbc.com/asia-markets/");
      if (!$) return [];
-     const newsList = [];
-
+     
+     const elements = [];
      $(".Card-titleContainer").each((i, el) => {
          if (i > 10) return;
+         elements.push(el);
+     });
+
+     const newsList = await Promise.all(elements.map(async (el) => {
          const titleEl = $(el).find("a");
          const link = titleEl.attr("href");
          const title = cleanText(titleEl.text());
 
          // Simple filter for India relevance if possible, otherwise take Asian market news
          if (link) {
-            newsList.push({
+            const highResImage = await getImageFromArticle(link);
+            return {
                 title: title,
                 description: "",
-                image: "",
+                image: highResImage,
                 url: link,
                 source: "CNBC Asia"
-            });
+            };
          }
-     });
-     return newsList;
+         return null;
+     }));
+     return newsList.filter(n => n !== null);
 }
 
 const scrapeReutersIndia = async () => {
@@ -285,24 +373,32 @@ const scrapeReutersIndia = async () => {
     // Reuters India specific section
     const $ = await getCheerioDoc("https://www.reuters.com/world/india/");
     if (!$) return [];
-    const newsList = [];
-
+    
+    const elements = [];
     $("li[class*='story-collection']").each((i, el) => {
+         // Reuters pages can be heavy, limit strict
+         if (i > 10) return;
+         elements.push(el);
+    });
+    
+    const newsList = await Promise.all(elements.map(async (el) => {
          const titleEl = $(el).find("a[data-testid='Heading']");
          const link = titleEl.attr("href");
          const fullLink = link && link.startsWith("/") ? `https://www.reuters.com${link}` : link;
 
          if (titleEl.length) {
-             newsList.push({
+             const highResImage = await getImageFromArticle(fullLink);
+             return {
                  title: cleanText(titleEl.text()),
                  description: "",
-                 image: "",
+                 image: highResImage,
                  url: fullLink,
                  source: "Reuters India"
-             });
+             };
          }
-    });
-    return newsList;
+         return null;
+    }));
+    return newsList.filter(n => n !== null);
 }
 
 
