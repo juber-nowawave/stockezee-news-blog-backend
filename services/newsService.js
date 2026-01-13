@@ -1,10 +1,11 @@
 import db from "../models/index.js";
+import dotenv from "dotenv";
 import { scrapeStockNews } from "./newsScraper.js";
 import { generateBlogContent } from "../ai/contentGenerator.js";
 import { generateImage } from "../ai/imageGenerator.js";
 import { generateAndUploadImage } from "./newsImageService.js";
 import moment from "moment";
-
+dotenv.config();
 const StockNewsBlog = db.stockNewsBlog;
 
 export const processStockNews = async () => {
@@ -29,18 +30,20 @@ export const processStockNews = async () => {
         // Fetch AI Image from external service and upload to S3
         let aiImageUrl = await generateAndUploadImage(news.title, news.description);
         if (!aiImageUrl) {
-            aiImageUrl = news.image; // Fallback to original image if generation fails
+          aiImageUrl = process.env.FALL_BACK_IMAGE; // Fallback to original image if generation fails
+          console.log('------___________>>>',aiImageUrl);
         }
 
         await StockNewsBlog.create({
           title: news.title,
           description: news.description,
           image: news.image,
+          source: news.source,
           ai_generated: aiContent.generated_blog,
           meta_title: aiContent.meta_title,
           meta_description: aiContent.meta_description,
           news_image: news.image,
-          ai_image: aiImageUrl,
+          ai_image: aiImageUrl || '',
           time: moment().tz("Asia/Kolkata").format("HH:mm:ss"),
           created_at: moment().tz("Asia/Kolkata").format("YYYY-MM-DD"),
         });

@@ -21,17 +21,17 @@ export const generateAndUploadImage = async (title, description) => {
     // 1. Call External API
     const response = await axios.post(
       IMAGE_GENERATION_API,
-      { title, description },
+      { headline:title, summary:description },
       { responseType: "arraybuffer" } // Expecting image binary
     );
 
     if (!response.data) {
-      throw new Error("No data received from image generation API");
+      throw new Error("-------------------No data received from image generation API-------------------");
     }
 
     // 2. Upload to S3
     // Generate a unique filename
-    const filename = `news-images/${Date.now()}-${title.replace(/[^a-zA-Z0-9]/g, "-").substring(0, 50)}.jpg`;
+    const filename = `${process.env.S3_BUCKET_FOLDER_PATH}/${Date.now()}-${title.replace(/[^a-zA-Z0-9]/g, "-").substring(0, 50)}.jpg`;
     
     const uploadParams = {
       Bucket: process.env.S3_BUCKET_NAME,
@@ -43,7 +43,7 @@ export const generateAndUploadImage = async (title, description) => {
 
     await s3Client.send(new PutObjectCommand(uploadParams));
 
-    const s3Url = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${filename}`;
+    const s3Url = `${process.env.IMAGE_ACCESS_DOMAIN}/${filename}`;
     console.log(`Image uploaded to S3: ${s3Url}`);
     
     return s3Url;
