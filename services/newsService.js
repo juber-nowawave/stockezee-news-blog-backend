@@ -21,17 +21,15 @@ export const processStockNews = async () => {
 
       if (!existing) {
         let aiContent = null;
-        // let imageUrl = news.image;
-        // imageUrl = await generateImage(news.title);
-
+        
         // Generate AI content if not present
           aiContent = await generateBlogContent(news.title, news.description);
 
         // Fetch AI Image from external service and upload to S3
-        let aiImageUrl = await generateAndUploadImage(news.title, news.description);
+        let aiImageUrl = await generateAndUploadImage(news.title, news.description, news.image);
         if (!aiImageUrl) {
-          aiImageUrl = process.env.FALL_BACK_IMAGE; // Fallback to original image if generation fails
-          console.log('------___________>>>',aiImageUrl);
+          aiImageUrl = process.env.FALL_BACK_IMAGE;
+          console.log('------>>>',aiImageUrl,'<<<------');
         }
 
         await StockNewsBlog.create({
