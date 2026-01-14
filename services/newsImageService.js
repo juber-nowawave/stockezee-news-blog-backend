@@ -1,7 +1,8 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import axios from "axios";
 import dotenv from "dotenv";
-
+import { generateImage } from "../ai/imageGenerator.js";
+import fs from "fs";
 dotenv.config();
 
 const s3Client = new S3Client({
@@ -12,32 +13,27 @@ const s3Client = new S3Client({
   },
 });
 
-const IMAGE_GENERATION_API = process.env.IMAGE_GENERATION_API;
-
-export const generateAndUploadImage = async (title, description) => {
+export const generateAndUploadImage = async (title, description, imageUrl) => {
   try {
     console.log(`Generating image for: ${title}`);
-    
-    // 1. Call External API
-    const response = await axios.post(
-      IMAGE_GENERATION_API,
-      { headline:title, summary:description },
-      { responseType: "arraybuffer" } // Expecting image binary
-    );
+    const response = await generateImage(title, description, imageUrl);
 
-    if (!response.data) {
-      throw new Error("-------------------No data received from image generation API-------------------");
+    if (!response || !response.success || !response.local_path) {
+      throw new Error("-------------------No valid image generated-------------------");
     }
 
     // 2. Upload to S3
+    // Read file from local path
+    const fileContent = fs.readFileSync(response.local_path);
+
     // Generate a unique filename
     const filename = `${process.env.S3_BUCKET_FOLDER_PATH}/${Date.now()}-${title.replace(/[^a-zA-Z0-9]/g, "-").substring(0, 50)}.jpg`;
     
     const uploadParams = {
       Bucket: process.env.S3_BUCKET_NAME,
       Key: filename,
-      Body: response.data,
-      ContentType: "image/jpeg", // Assuming JPEG, can check headers if needed
+      Body: fileContent,
+      ContentType: "image/jpeg",
       // ACL: "public-read", // Optional: depends on bucket settings
     };
 
@@ -50,6 +46,6 @@ export const generateAndUploadImage = async (title, description) => {
 
   } catch (error) {
     console.error("Error in generateAndUploadImage:", error.message);
-    return null; // Return null so the main flow can continue without an AI image
+    return null;
   }
 };
