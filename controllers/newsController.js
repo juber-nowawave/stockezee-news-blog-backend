@@ -17,7 +17,7 @@ export const getAllNewsSummary = async (req, res) => {
   try {
     const news = await stockNewsBlog.findAll({
       order: [['created_at', 'DESC'], ['time', 'DESC']],
-      attributes:{exclude: ['ai_generated','source']}
+      attributes:{exclude: ['ai_generated','source','news_image']}
     });
     return sendResponse(res, 200, "News summary retrieved", news);
   } catch (error) {
@@ -30,7 +30,7 @@ export const getNewsById = async (req, res) => {
   try {
     const { id } = req.query;
     const news = await stockNewsBlog.findByPk(id,{
-      attributes:{exclude: ['source']}
+      attributes:{exclude: ['source','news_image']}
     });
 
     if (!news) {
@@ -51,7 +51,7 @@ export const getNewsByMetaTitle = async (req, res) => {
       where: {
         meta_title: { [Op.iLike]: meta_title }
       },
-      attributes:{exclude: ['source']}
+      attributes:{exclude: ['source','news_image']}
     });
 
     if (!news) {
