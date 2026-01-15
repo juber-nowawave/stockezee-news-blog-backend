@@ -1,8 +1,8 @@
 import cron from 'node-cron';
 import { processStockNews } from './services/newsService.js';
 
-// Schedule task to run at 8:00 AM and 5:00 PM every day
-cron.schedule('0 8,18 * * *', async () => {
+// Schedule task to run every 3 hours
+cron.schedule('0 */3 * * *', async () => {
   console.log('Running scheduled news scraping...');
   try {
     const result = await processStockNews();

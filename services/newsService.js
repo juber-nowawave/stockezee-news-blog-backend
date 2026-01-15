@@ -4,6 +4,7 @@ import { scrapeStockNews } from "./newsScraper.js";
 import { generateBlogContent } from "../ai/contentGenerator.js";
 import { generateImage } from "../ai/imageGenerator.js";
 import { generateAndUploadImage } from "./newsImageService.js";
+import { selectTopNews } from "./newsSelector.js";
 import moment from "moment";
 dotenv.config();
 const StockNewsBlog = db.stockNewsBlog;
@@ -13,13 +14,30 @@ export const processStockNews = async () => {
   const newsData = await scrapeStockNews();
   let savedCount = 0;
 
+  // 1. FILTER: Identify which news items are actually NEW (not in DB)
+  const newNewsCandidates = [];
   for (const news of newsData) {
-    try {
-      const existing = await StockNewsBlog.findOne({
+    const existing = await StockNewsBlog.findOne({
         where: { title: news.title },
-      });
+    });
+    if (!existing) {
+        newNewsCandidates.push(news);
+    }
+  }
 
-      if (!existing) {
+  console.log(`Found ${newNewsCandidates.length} new articles candidates out of ${newsData.length} scraped.`);
+
+  if (newNewsCandidates.length === 0) {
+      console.log("No new news to process.");
+      return { totalScraped: newsData.length, savedNew: 0, data: newsData };
+  }
+
+  // 2. SELECT: Pick top 2 most important from the NEW candidates
+  const topNews = await selectTopNews(newNewsCandidates);
+
+  // 3. PROCESS: Generate content and save strictly for the selected ones
+  for (const news of topNews) {
+    try {
         let aiContent = null;
         
         // Generate AI content if not present
@@ -50,11 +68,6 @@ export const processStockNews = async () => {
         savedCount++;
         console.log(`Saved new article: ${news.title}`);
 
-        if (savedCount >= 8) {
-             console.log("Daily limit of 8 news articles reached. Stopping.");
-             break;
-        }
-      }
     } catch (err) {
       console.error(`Error processing news item ${news.title}:`, err);
       // Continue to next item even if one fails
