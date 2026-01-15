@@ -50,10 +50,10 @@ class PexelsService {
         fs.writeFileSync(filePath, Buffer.from(response.data));
         
         // APPLY WATERMARK & RESIZE
-        await WatermarkService.applyWatermark(filePath);
-        console.log(`✅ Saved and Watermarked Pexels Image: ${filePath}`);
+        const finalPath = await WatermarkService.applyWatermark(filePath);
+        console.log(`✅ Saved and Watermarked Pexels Image: ${finalPath}`);
 
-        return filePath;
+        return finalPath;
       }
     } catch (error) {
       console.error(`❌ Pexels Download Error: ${error.message}`);

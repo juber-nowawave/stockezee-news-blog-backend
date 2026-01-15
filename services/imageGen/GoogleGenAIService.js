@@ -82,11 +82,13 @@ class GoogleImagenGenerator {
   }
 
   async _applyWatermarkAndReturn(filePath, sourceTag, filename) {
-      await WatermarkService.applyWatermark(filePath);
+      const newPath = await WatermarkService.applyWatermark(filePath);
+      const newFilename = path.basename(newPath);
+      
       return {
         source: sourceTag,
-        local_path: filePath,
-        relative_path: `/public/images/${filename}`
+        local_path: newPath,
+        relative_path: `/public/images/${newFilename}`
       };
   }
 }

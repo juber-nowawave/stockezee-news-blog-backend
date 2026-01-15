@@ -27,13 +27,13 @@ export const generateAndUploadImage = async (title, description, imageUrl) => {
     const fileContent = fs.readFileSync(response.local_path);
 
     // Generate a unique filename
-    const filename = `${process.env.S3_BUCKET_FOLDER_PATH}/${Date.now()}-${title.replace(/[^a-zA-Z0-9]/g, "-").substring(0, 50)}.jpg`;
+    const filename = `${process.env.S3_BUCKET_FOLDER_PATH}/${Date.now()}-${title.replace(/[^a-zA-Z0-9]/g, "-").substring(0, 50)}.webp`;
     
     const uploadParams = {
       Bucket: process.env.S3_BUCKET_NAME,
       Key: filename,
       Body: fileContent,
-      ContentType: "image/jpeg",
+      ContentType: "image/webp",
       // ACL: "public-read", // Optional: depends on bucket settings
     };
 

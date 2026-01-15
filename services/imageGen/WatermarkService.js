@@ -54,10 +54,17 @@ class WatermarkService {
                 .composite([{ input: logoBuffer, top: top, left: left }])
                 .toBuffer();
 
-            // Overwrite original
-            await sharp(finalBuffer).toFile(imagePath);
+            // Save as WebP
+            const newPath = imagePath.replace(/\.[^/.]+$/, ".webp");
+            await sharp(finalBuffer).webp({ quality: 90 }).toFile(newPath);
             
-            console.log("💧 Watermark applied successfully.");
+            // Delete original file if different
+            if (imagePath !== newPath && fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
+            }
+
+            console.log(`💧 Watermark applied & Converted to WebP: ${newPath}`);
+            return newPath;
         } catch (error) {
             console.error(`❌ Watermarking Error: ${error.message}`);
         }
