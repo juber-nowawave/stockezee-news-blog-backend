@@ -35,8 +35,7 @@ class GoogleImagenGenerator {
         }
       ],
       parameters: {
-        sampleCount: 1,
-        // aspectRatio: "4:3" 
+        aspectRatio: "16:9" 
       }
     };
 
