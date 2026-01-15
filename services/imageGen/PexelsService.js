@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import { WatermarkService } from './WatermarkService.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const IMAGES_SAVE_DIR = path.join(__dirname, '../../public/images');
@@ -46,6 +48,11 @@ class PexelsService {
         const filename = `article_${articleId}.jpg`;
         const filePath = path.join(IMAGES_SAVE_DIR, filename);
         fs.writeFileSync(filePath, Buffer.from(response.data));
+        
+        // APPLY WATERMARK & RESIZE
+        await WatermarkService.applyWatermark(filePath);
+        console.log(`✅ Saved and Watermarked Pexels Image: ${filePath}`);
+
         return filePath;
       }
     } catch (error) {
@@ -53,6 +60,7 @@ class PexelsService {
     }
     return null;
   }
+
 }
 
 export { PexelsService };
