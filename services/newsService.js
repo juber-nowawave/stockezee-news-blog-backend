@@ -24,7 +24,9 @@ export const processStockNews = async () => {
         
         // Generate AI content if not present
           aiContent = await generateBlogContent(news.title, news.description);
-
+          if(!aiContent){
+            continue;
+          }
         // Fetch AI Image from external service and upload to S3
         let aiImageUrl = await generateAndUploadImage(news.title, news.description, news.image);
         if (!aiImageUrl) {
