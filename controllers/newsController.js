@@ -13,22 +13,25 @@ export const fetchAndSaveNews = async (req, res) => {
   }
 };
 
-export const getAllNews = async (req, res) => {
+export const getAllNewsSummary = async (req, res) => {
   try {
     const news = await stockNewsBlog.findAll({
-      order: [['created_at', 'DESC'], ['time', 'DESC']]
+      order: [['created_at', 'DESC'], ['time', 'DESC']],
+      attributes:{exclude: ['ai_generated','source']}
     });
-    return sendResponse(res, 200, "News retrieved", news);
+    return sendResponse(res, 200, "News summary retrieved", news);
   } catch (error) {
-    console.error("Error getting news:", error);
-    return sendResponse(res, 500, "Error retrieving news", { error: error.message });
+    console.error("Error getting news summary:", error);
+    return sendResponse(res, 500, "Error retrieving news summary", { error: error.message });
   }
 };
 
 export const getNewsById = async (req, res) => {
   try {
     const { id } = req.query;
-    const news = await stockNewsBlog.findByPk(id);
+    const news = await stockNewsBlog.findByPk(id,{
+      attributes:{exclude: ['source']}
+    });
 
     if (!news) {
       return sendResponse(res, 404, "News not found", []);
@@ -47,7 +50,8 @@ export const getNewsByMetaTitle = async (req, res) => {
     const news = await stockNewsBlog.findOne({
       where: {
         meta_title: { [Op.iLike]: meta_title }
-      }
+      },
+      attributes:{exclude: ['source']}
     });
 
     if (!news) {
@@ -81,18 +85,5 @@ export const searchNewsByTitle = async (req, res) => {
   } catch (error) {
     console.error("Error searching news:", error);
     return sendResponse(res, 500, "Error searching news", { error: error.message });
-  }
-};
-
-export const getAllNewsSummary = async (req, res) => {
-  try {
-    const news = await stockNewsBlog.findAll({
-      order: [['created_at', 'DESC'], ['time', 'DESC']],
-      attributes:{exclude: ['ai_generated']}
-    });
-    return sendResponse(res, 200, "News summary retrieved", news);
-  } catch (error) {
-    console.error("Error getting news summary:", error);
-    return sendResponse(res, 500, "Error retrieving news summary", { error: error.message });
   }
 };

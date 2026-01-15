@@ -47,6 +47,11 @@ export const processStockNews = async () => {
         });
         savedCount++;
         console.log(`Saved new article: ${news.title}`);
+
+        if (savedCount >= 8) {
+             console.log("Daily limit of 8 news articles reached. Stopping.");
+             break;
+        }
       }
     } catch (err) {
       console.error(`Error processing news item ${news.title}:`, err);
