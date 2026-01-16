@@ -134,6 +134,23 @@ MANDATORY CONTENT STRUCTURE (FOR generated_blog)
    </div>
 
 --------------------------------------------------
+AI GENERATED TITLE AND DESCRIPTION
+--------------------------------------------------
+
+- Generate an ai_title that is a refined, newsroom-style headline.
+- The ai_title must be closely related to the input News title.
+- The ai_title should improve clarity, context, and relevance.
+- Do NOT use symbols, emojis, or decorative characters.
+- Do NOT include HTML tags.
+- Keep it concise and professional.
+
+- Generate an ai_description that is a rewritten editorial summary.
+- The ai_description must be closely related to the input News description.
+- It should explain the market relevance in one or two sentences.
+- Do NOT include HTML tags.
+- Do NOT sound promotional or advisory.
+
+--------------------------------------------------
 META DATA REQUIREMENTS
 --------------------------------------------------
 
@@ -230,6 +247,8 @@ Return ONLY this JSON object and nothing else:
 
 {{
   "generated_blog": "HTML content here (JSON-safe, no unescaped double quotes)",
+  "ai_title": "AI generated newsroom headline related to input title",
+  "ai_description": "AI generated editorial description related to input description",
   "meta_title": "SEO meta title (JSON-safe)",
   "meta_description": "SEO meta description (JSON-safe)"
 }}
@@ -272,7 +291,9 @@ CONTENT RESTRICTIONS
     if (
       !parsed.generated_blog ||
       !parsed.meta_title ||
-      !parsed.meta_description
+      !parsed.meta_description ||
+      !parsed.ai_title ||
+      !parsed.ai_description
     ) {
       throw new Error("Missing required fields in AI response");
     }

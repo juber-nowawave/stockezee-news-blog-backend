@@ -17,7 +17,12 @@ export const getAllNewsSummary = async (req, res) => {
   try {
     const news = await stockNewsBlog.findAll({
       order: [['created_at', 'DESC'], ['time', 'DESC']],
-      attributes:{exclude: ['ai_generated','source','news_image']}
+      attributes:{exclude: ['ai_generated','source','news_image','title','description','ai_title','ai_description'],
+      include: [
+       ['ai_title', 'title'], // alias ai_title as title
+       ['ai_description', 'description'] // alias ai_description as description
+       ]  
+      }
     });
     return sendResponse(res, 200, "News summary retrieved", news);
   } catch (error) {
@@ -30,7 +35,12 @@ export const getNewsById = async (req, res) => {
   try {
     const { id } = req.query;
     const news = await stockNewsBlog.findByPk(id,{
-      attributes:{exclude: ['source','news_image']}
+      attributes:{exclude: ['source','news_image','title','description','ai_title','ai_description'],
+       include: [
+        ['ai_title', 'title'], // alias ai_title as title
+        ['ai_description', 'description'] // alias ai_description as description
+        ]
+      }
     });
 
     if (!news) {
@@ -51,7 +61,12 @@ export const getNewsByMetaTitle = async (req, res) => {
       where: {
         meta_title: { [Op.iLike]: meta_title }
       },
-      attributes:{exclude: ['source','news_image']}
+      attributes:{exclude: ['source','news_image','title','description','ai_title','ai_description'],
+      include: [
+       ['ai_title', 'title'], // alias ai_title as title
+       ['ai_description', 'description'] // alias ai_description as description
+       ]  
+      }
     });
 
     if (!news) {
@@ -78,7 +93,7 @@ export const searchNewsByTitle = async (req, res) => {
           [db.Sequelize.Op.ilike]: `%${query}%`
         }
       },
-      attributes: ['id', 'title']
+      attributes: ['id',['ai_title', 'title']]
     });
 
     return sendResponse(res, 200, "Search results", news);

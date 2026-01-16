@@ -57,6 +57,8 @@ export const processStockNews = async () => {
           description: news.description,
           image: news.image,
           source: news.source,
+          ai_title: aiContent.ai_title,
+          ai_description: aiContent.ai_description,
           ai_generated: aiContent.generated_blog,
           meta_title: aiContent.meta_title,
           meta_description: aiContent.meta_description,

@@ -12,6 +12,10 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      ai_title: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
       meta_title: {
         type: DataTypes.TEXT,
         allowNull: false,
@@ -19,6 +23,10 @@ export default (sequelize, DataTypes) => {
       description: {
         type: DataTypes.TEXT,
         allowNull: false,
+      },
+      ai_description: {
+        type: DataTypes.TEXT,
+        allowNull: true,
       },
       meta_description: {
         type: DataTypes.TEXT,
